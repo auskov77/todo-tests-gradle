@@ -4,14 +4,20 @@
 
 plugins {
     id 'java-library'
-    id 'maven-publish'
+    id 'idea'
+    id 'java'
+    id 'io.qameta.allure' version '2.11.2'
 }
+
 
 repositories {
     mavenLocal()
-    maven {
-        url = uri('https://repo.maven.apache.org/maven2/')
-    }
+    mavenCentral()
+}
+
+configurations {
+    allureCommandline
+    testCompile
 }
 
 dependencies {
@@ -25,19 +31,39 @@ dependencies {
     api 'org.apache.logging.log4j:log4j-slf4j-impl:2.20.0'
     api 'org.apache.logging.log4j:log4j-api:2.20.0'
     api 'org.apache.logging.log4j:log4j-core:2.20.0'
-    testImplementation 'io.qameta.allure:allure-junit5:2.21.0'
-    compileOnly 'org.projectlombok:lombok:1.18.26'
+    testImplementation 'io.qameta.allure:allure-junit5:2.22.0'
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+    allureCommandline group: "io.qameta.allure", name: "allure-commandline", version: "2.13.0", ext: "zip"
 }
 
 group = 'ru.buttonone'
 version = '1.0-SNAPSHOT'
 description = 'todo-tests-gradle'
-java.sourceCompatibility = JavaVersion.VERSION_1_8
 
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from(components.java)
-        }
+apply plugin: 'io.qameta.allure'
+apply plugin: 'java'
+
+test {
+    useJUnitPlatform()
+    dependsOn 'cleanTest'
+    // Show test results.
+    testLogging {
+        events "passed", "skipped", "failed"
     }
 }
+
+allure {
+    version = '2.13.0'
+}
+
+task getAllure(type: Copy) {
+    from zipTree(configurations.allureCommandline.singleFile)
+    into "${rootDir}/.allure"
+    doLast {
+        downloadAllure.enabled = false
+    }
+}
+
+test.finalizedBy('getAllure')
+getAllure.finalizedBy('allureReport')
