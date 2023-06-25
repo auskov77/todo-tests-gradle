@@ -11,7 +11,6 @@ plugins {
 
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
@@ -54,14 +53,3 @@ test {
 allure {
     version = '2.13.0'
 }
-
-task getAllure(type: Copy) {
-    from zipTree(configurations.allureCommandline.singleFile)
-    into "${rootDir}/.allure"
-    doLast {
-        downloadAllure.enabled = false
-    }
-}
-
-test.finalizedBy('getAllure')
-getAllure.finalizedBy('allureReport')
